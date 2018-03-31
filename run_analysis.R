@@ -2,41 +2,43 @@
 
 library(reshape2) 
 
-# Load activity labels + features
+# Loading and reading data
 activityLabels <- read.table("UCI HAR Dataset/activity_labels.txt")
 activityLabels[,2] <- as.character(activityLabels[,2])
 features <- read.table("UCI HAR Dataset/features.txt")
 features[,2] <- as.character(features[,2])
 
 # Extract only the data on mean and standard deviation
-featuresWanted <- grep(".*mean.*|.*std.*", features[,2])
-featuresWanted.names <- features[featuresWanted,2]
-featuresWanted.names = gsub('-mean', 'Mean', featuresWanted.names)
-featuresWanted.names = gsub('-std', 'Std', featuresWanted.names)
-featuresWanted.names <- gsub('[-()]', '', featuresWanted.names)
+wantedFeatures <- grep(".*mean.*|.*std.*", features[,2])
+wantedFeatures.names <- features[wantedFeatures,2]
+wantedFeatures.names = gsub('-mean', 'Mean', wantedFeatures.names)
+wantedFeatures.names = gsub('-std', 'Std', wantedFeatures.names)
+wantedFeatures.names <- gsub('[-()]', '', wantedFeatures.names)
 
 
 # Load the datasets
-train <- read.table("UCI HAR Dataset/train/X_train.txt")[featuresWanted]
+# train dataset
+train <- read.table("UCI HAR Dataset/train/X_train.txt")[wantedFeatures]
 trainActivities <- read.table("UCI HAR Dataset/train/Y_train.txt")
 trainSubjects <- read.table("UCI HAR Dataset/train/subject_train.txt")
 train <- cbind(trainSubjects, trainActivities, train)
 
-test <- read.table("UCI HAR Dataset/test/X_test.txt")[featuresWanted]
+#testdataset
+test <- read.table("UCI HAR Dataset/test/X_test.txt")[wantedFeatures]
 testActivities <- read.table("UCI HAR Dataset/test/Y_test.txt")
 testSubjects <- read.table("UCI HAR Dataset/test/subject_test.txt")
 test <- cbind(testSubjects, testActivities, test)
 
 # merge datasets and add labels
-allData <- rbind(train, test)
-colnames(allData) <- c("subject", "activity", featuresWanted.names)
+Data <- rbind(train, test)
+colnames(Data) <- c("subject", "activity", wantedFeatures.names)
 
 # turn activities & subjects into factors
-allData$activity <- factor(allData$activity, levels = activityLabels[,1], labels = activityLabels[,2])
-allData$subject <- as.factor(allData$subject)
+Data$activity <- factor(Data$activity, levels = activityLabels[,1], labels = activityLabels[,2])
+Data$subject <- as.factor(Data$subject)
 
-allData.melted <- melt(allData, id = c("subject", "activity"))
-allData.mean <- dcast(allData.melted, subject + activity ~ variable, mean)
+Data.melted <- melt(Data, id = c("subject", "activity"))
+Data.mean <- dcast(Data.melted, subject + activity ~ variable, mean)
 
 # New tidy dataset created as "tidy.txt" 
-write.table(allData.mean, "tidy.txt", row.names = FALSE, quote = FALSE)
+write.table(Data.mean, "tidy.txt", row.names = FALSE, quote = FALSE)
